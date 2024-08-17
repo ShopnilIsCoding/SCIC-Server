@@ -11,18 +11,20 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.o0npkhl.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
     serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
+      version: ServerApiVersion.v1,
+      strict: true,
+      deprecationErrors: true,
     }
 });
 
 async function run() {
     try {
         await client.connect();
+        console.log("Connected to MongoDB!");
+
         const productCollection = client.db('storeDB').collection('products');
 
-        // Pagination and Product Fetching Route
+        // Fetch products with pagination, searching, filtering, and sorting
         app.get('/api/products', async (req, res) => {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -36,6 +38,7 @@ async function run() {
             const skip = (page - 1) * limit;
 
             try {
+                // Build the query object based on search, filter, and price range
                 let query = {
                     name: { $regex: searchTerm, $options: 'i' },
                     brand: { $regex: brand, $options: 'i' },
@@ -43,21 +46,24 @@ async function run() {
                     price: { $gte: priceMin, $lte: priceMax },
                 };
 
+                // Sort products based on the sortBy parameter
                 let sortOption = {};
                 if (sortBy === 'priceAsc') sortOption.price = 1;
                 if (sortBy === 'priceDesc') sortOption.price = -1;
                 if (sortBy === 'dateAdded') sortOption.createdAt = -1;
 
-                const products = await productCollection.find(query).sort(sortOption).skip(skip).limit(limit).toArray();
-                const total = await productCollection.countDocuments(query);
+                const products = await productCollection.find(query)
+                    .sort(sortOption)
+                    .skip(skip)
+                    .limit(limit)
+                    .toArray();
 
+                const total = await productCollection.countDocuments(query);
                 res.json({ products, total, page, pages: Math.ceil(total / limit) });
             } catch (error) {
                 res.status(500).json({ error: 'Failed to fetch products' });
             }
         });
-
-        
 
     } catch (error) {
         console.error("Failed to connect to MongoDB", error);
