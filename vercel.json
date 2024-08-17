@@ -6,21 +6,10 @@
       "use": "@vercel/node"
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/index.js"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://scic-server-eight.vercel.app/favicon.ico; style-src 'self' 'unsafe-inline'; font-src 'self';"
-        }
-      ]
+      "src": "/api/(.*)",
+      "dest": "/index.js"
     }
   ]
 }

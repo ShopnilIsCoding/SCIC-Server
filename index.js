@@ -13,11 +13,18 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
-        strict: false, // Disable strict mode to allow commands like 'distinct'
+        strict: false, 
         deprecationErrors: true,
     },
 });
-
+app.use((req, res, next) => {
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; img-src 'self' https://scic-server-eight.vercel.app;"
+    );
+    next();
+  });
+  
 async function run() {
     try {
         await client.connect();
