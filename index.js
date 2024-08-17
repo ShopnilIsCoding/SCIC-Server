@@ -12,7 +12,7 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, {
     serverApi: {
       version: ServerApiVersion.v1,
-      strict: true,
+      strict: false,
       deprecationErrors: true,
     }
 });
@@ -64,6 +64,39 @@ async function run() {
                 res.status(500).json({ error: 'Failed to fetch products' });
             }
         });
+
+        app.get('/products',async(req,res)=>
+        {
+            const products = await productCollection.find().toArray();
+            res.json(products);
+
+        })
+
+        app.get('/api/brands', async (req, res) => {
+    try {
+        const brands = await productCollection.aggregate([
+            { $group: { _id: "$brand" } },
+            { $project: { _id: 0, brand: "$_id" } }
+        ]).toArray();
+        res.json(brands.map(item => item.brand));
+    } catch (error) {
+        console.error('Failed to fetch brands:', error);
+        res.status(500).json({ error: 'Failed to fetch brands' });
+    }
+});
+
+        
+        app.get('/api/categories', async (req, res) => {
+            try {
+                const categories = await productCollection.distinct('category');
+                res.json(categories);
+            } catch (error) {
+                console.error('Failed to fetch categories:', error);
+                res.status(500).json({ error: error.message });
+            }
+        });
+        
+        
 
     } catch (error) {
         console.error("Failed to connect to MongoDB", error);
